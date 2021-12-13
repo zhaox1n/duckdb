@@ -1,24 +1,33 @@
-find_package(Java 1.8)
-find_package(JNI)
 
 cmake_minimum_required(VERSION 3.11.0)
+
+set(JAVA_AWT_LIBRARY "$ENV{JAVA_HOME}/lib/amd64/libjawt.so")
+set(JAVA_JVM_LIBRARY "$ENV{JAVA_HOME}/jre/lib/amd64/server/libjvm.so")
+
+set(JAVA_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
+set(JAVA_AWT_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
+
+find_package(Java 1.8)
+find_package(JNI)
 
 if(NOT JNI_FOUND OR NOT Java_FOUND)
   message(FATAL_ERROR No compatible Java/JNI found)
 endif()
 
 include(UseJava)
-project(DuckDBJDummy NONE)
+project(DuckDBJDummy C CXX)
 
 file(GLOB JAVA_SRC_FILES src/main/java/org/duckdb/*.java)
 file(GLOB JAVA_TEST_FILES src/test/java/org/duckdb/test/*.java)
 
-set(CMAKE_JAVA_COMPILE_FLAGS -source 1.7 -target 1.7 -encoding utf-8)
+set(CMAKE_JAVA_COMPILE_FLAGS -source 1.8 -target 1.8 -encoding utf-8)
 
 add_jar(duckdb_jdbc ${JAVA_SRC_FILES} ${JAVA_TEST_FILES}
         META-INF/services/java.sql.Driver GENERATE_NATIVE_HEADERS duckdb-native)
 
 include_directories(../../extension/parquet/include)
+include_directories(../../src/include)
+include_directories(../../third_party/utf8proc/include/)
 
 add_library(duckdb_java SHARED src/jni/duckdb_java.cpp)
 target_compile_options(duckdb_java PRIVATE -fexceptions)
